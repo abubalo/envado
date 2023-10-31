@@ -46,13 +46,4 @@ function validateEnv(config: { [envName: string]: string | number }): {
   return result;
 }
 
-// Call the validateEnv function to validate and load environment variables
-const envConfig = validateEnv({
-  SECRET_KEY: "string",
-});
-
-export { validateEnv };
-// console.log("Environment Configuration:", envConfig);
-
-// Access the validated values directly
-console.log("SECRET_KEY:", envConfig.SECRET_KEY);
+export default validateEnv
