@@ -20,19 +20,19 @@ const loadEnv = (envName: string): string | undefined => {
  * Validate and load an environment variable with optional validation.
  * @param envName - The name of the environment variable.
  * @param defaultValue - The default value to use if the environment variable is not set or empty.
- * @param validator - An optional validation function for the environment variable value.
+ * @param validator - An optional validation const for the environment variable value.
  * @returns The validated and loaded environment variable value.
  * @throws {MissingEnvVariableError} if the environment variable is missing and no default value is provided.
  * @throws {InvalidEnvVariableError} if the environment variable fails validation.
  */
-const validateEnvVariable = <T>(
+const validateEnv = <T>(
   envName: string,
   defaultValue: T | undefined = undefined,
   validator?: (value: string) => boolean
 ): T => {
   const value = loadEnv(envName);
 
-  if (value === undefined || value === "") {
+  if (value === undefined) {
     if (defaultValue === undefined) {
       throw new MissingEnvVariableError(envName);
     } else {
@@ -52,24 +52,24 @@ const validateEnvVariable = <T>(
  * @param config - The configuration specifying expected environment variables and their types.
  * @returns An object representing the validated environment variables.
  */
- type EnvType<T> = {
-    [key: string]: T;
-  };
-  
-  type EnvConfig<T extends EnvType<unknown>> = {
-    [K in keyof T]: T[K];
-  };
-  
-  type Config<T> = {
-    [K in keyof T]: T[K];
-  };
+type EnvType = {
+  [key: string]: string | number | Array<string> | object | boolean;
+};
+
+type EnvConfig<T extends EnvType> = {
+  [K in keyof T]: T[K];
+};
+
+type Config<T> = {
+  [K in keyof T]: T[K];
+};
 /**
  * Validate a set of environment variables using the specified configuration.
  * @param config - The configuration specifying expected environment variables and their types.
  * @returns An object representing the validated environment variables.
  */
-function validateEnv<T extends EnvType<unknown>>(config: Config<T>): EnvConfig<T> {
-  const result: EnvType<T> = {} as EnvType<T>;
+const envGuard = <T extends EnvType>(config: Config<T>): EnvConfig<T> => {
+  const result: EnvType = {};
 
   for (const envName in config) {
     if (config.hasOwnProperty(envName)) {
@@ -83,25 +83,25 @@ function validateEnv<T extends EnvType<unknown>>(config: Config<T>): EnvConfig<T
 
       if (typeof type === "number") {
         // Handle numbers
-        validate = validateEnvVariable<number>(envName, type, (value) => {
+        validate = validateEnv<number>(envName, type, (value) => {
           const port = parseInt(value, 10);
           return !isNaN(port) && port >= 1 && port <= 65535;
         });
       } else if (typeof type === "boolean") {
         // Handle booleans
-        validate = validateEnvVariable<boolean>(
+        validate = validateEnv<boolean>(
           envName,
           type,
           (value) => value === "true" || value === "false"
         );
       } else if (Array.isArray(type)) {
         // Handle arrays
-        validate = validateEnvVariable<string[]>(envName, type, (value) =>
+        validate = validateEnv<string[]>(envName, type, (value) =>
           Array.isArray(value.split(","))
         );
       } else if (typeof type === "object") {
         // Handle objects (JSON)
-        validate = validateEnvVariable<object>(envName, type, (value) => {
+        validate = validateEnv<object>(envName, type, (value) => {
           try {
             JSON.parse(value);
             return true;
@@ -111,15 +111,29 @@ function validateEnv<T extends EnvType<unknown>>(config: Config<T>): EnvConfig<T
         });
       } else {
         // Default: treat as string
-        validate = validateEnvVariable<string>(envName, type);
+        validate = validateEnv<string>(envName, type);
       }
 
-       result[envName] = validate;
+      result[envName] = validate;
     }
   }
 
   return result as EnvConfig<T>;
-}
+};
 
-// Export the validateEnv function as the default export
-export default validateEnv;
+const envConfig = envGuard({
+  SECRET_KEY: "string",
+  API_KEY: "string",
+  ENABLE_FEATURE: "boolean",
+  DEBUG_MODE: "boolean",
+  CONFIG_JSON: "json",
+  TAGS: "array",
+  PORT: "number",
+});
+
+console.log("SECRET_KEY:", envConfig.SECRET_KEY);
+console.log("API_KEY:", envConfig.API_KEY);
+console.log("PORT:", envConfig.PORT);
+console.log("PORT datatype:", typeof envConfig.PORT);
+// Export the envGuard const as the default export
+export default envGuard;
