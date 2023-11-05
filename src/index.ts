@@ -25,7 +25,7 @@ type ConfigType = "number" | "string" | "object" | "array" | "boolean";
 /**
  * Configuration object for environment variables.
  */
-type Config = {
+type Config<T> = {
   type: ConfigType; // The expected data type of the environment variable.
   defaultValue?: string | number | boolean | object | string[]; // An optional default value if the variable is not set.
 };
