@@ -1,5 +1,5 @@
 {
-  "name": "validate-env",
+  "name": "envguard",
   "version": "1.0.0",
   "description": "",
   "source": "src/index.ts",
@@ -9,11 +9,11 @@
   "type": "module",
   "scripts": {
     "build": "parcel build",
-    "watch": "parcel watch --log-level2",
+    "watch": "parcel watch",
     "test": "vitest"
   },
   "keywords": [
-    "env", "env-validate", "enviroment variable", "enviroment variable validator", "enviroment variable validation", "validate env", "env-validation", "dotenv", ".env validator"
+    "env", "env-validate", "enviroment variable", "enviroment variable validator", "enviroment variable validation", "validate env", "env-validation", "dotenv", "dotenv validator",".env validator", "evnguard"
   ],
   "author": "",
   "license": "ISC",
