@@ -8,132 +8,133 @@ import {
 dotenv.config();
 
 /**
- * Load an environment variable without validation.
- * @param envName - The name of the environment variable.
- * @returns The environment variable's value as a string or undefined if not set.
+ * Loads an environment variable's value.
+ *
+ * @param {string} envName - The name of the environment variable.
+ * @returns {string | undefined} The value of the environment variable or undefined if not found.
  */
 const loadEnv = (envName: string): string | undefined => {
   return process.env[envName];
 };
 
 /**
- * Validate and load an environment variable with optional validation.
- * @param envName - The name of the environment variable.
- * @param defaultValue - The default value to use if the environment variable is not set or empty.
- * @param validator - An optional validation const for the environment variable value.
- * @returns The validated and loaded environment variable value.
- * @throws {MissingEnvVariableError} if the environment variable is missing and no default value is provided.
- * @throws {InvalidEnvVariableError} if the environment variable fails validation.
+ * Represents the possible types for environment variables.
+ */
+type ConfigType = "number" | "string" | "object" | "array" | "boolean";
+
+/**
+ * Configuration object for environment variables.
+ */
+type Config = {
+  type: ConfigType; // The expected data type of the environment variable.
+  defaultValue?: string | number | boolean | object | string[]; // An optional default value if the variable is not set.
+};
+
+/**
+ * Represents the result of environment variable validation.
+ */
+type EnvGuardResult = {
+  [envName: string]: string | number | boolean | object | string[] | undefined;
+};
+
+/**
+ * Validates and loads an environment variable.
+ *
+ * @param {string} envName - The name of the environment variable.
+ * @param {ConfigType} _type - The expected data type of the environment variable.
+ * @param {T} defaultValue - An optional default value if the variable is not set.
+ * @param {(value: T | string) => boolean} validator - An optional validation function.
+ * @returns {T | string} The validated environment variable value.
+ * @throws {MissingEnvVariableError} if the variable is not set and no default value is provided.
+ * @throws {InvalidEnvVariableError} if the variable value is invalid based on the provided validator function.
  */
 const validateEnv = <T>(
   envName: string,
-  defaultValue: T | undefined = undefined,
-  validator?: (value: string) => boolean
-): T => {
-  const value = loadEnv(envName);
+  _type: ConfigType,
+  defaultValue?: T,
+  validator?: (value: T | string) => boolean
+): T | string => {
+  const rawValue = loadEnv(envName) || defaultValue;
 
-  if (value === undefined) {
-    if (defaultValue === undefined) {
-      throw new MissingEnvVariableError(envName);
-    } else {
-      return defaultValue;
-    }
+  if (rawValue === undefined) {
+    throw new MissingEnvVariableError(envName);
   }
 
-  if (validator && !validator(value)) {
-    throw new InvalidEnvVariableError(envName, value);
+  if (validator && !validator(rawValue)) {
+    throw new InvalidEnvVariableError(envName, rawValue as string);
   }
 
-  return value as unknown as T;
+  return rawValue;
 };
 
 /**
- * Validate environment variables based on the provided configuration.
- * @param config - The configuration specifying expected environment variables and their types.
- * @returns An object representing the validated environment variables.
+ * Guards and validates a set of environment variables based on a provided configuration.
+ *
+ * @param {Record<string, Config<EnvGuardResult>>} config - The configuration for environment variables.
+ * @returns {EnvGuardResult} An object containing the validated environment variables.
  */
-type EnvType = {
-  [key: string]: string | number | Array<string> | object | boolean;
-};
-
-type EnvConfig<T extends EnvType> = {
-  [K in keyof T]: T[K];
-};
-
-type Config<T> = {
-  [K in keyof T]: T[K];
-};
-/**
- * Validate a set of environment variables using the specified configuration.
- * @param config - The configuration specifying expected environment variables and their types.
- * @returns An object representing the validated environment variables.
- */
-const envGuard = <T extends EnvType>(config: Config<T>): EnvConfig<T> => {
-  const result: EnvType = {};
+const envGuard = (config: Record<string, Config<EnvGuardResult>>): EnvGuardResult => {
+  const result: EnvGuardResult = {};
 
   for (const envName in config) {
     if (config.hasOwnProperty(envName)) {
-      const type = config[envName];
+      const { type, defaultValue } = config[envName];
 
-      if (type === undefined) {
-        continue; // Skip undefined variables
+      switch (type) {
+        case "number":
+          result[envName] = validateEnv(
+            envName,
+            type,
+            defaultValue,
+            (value) => {
+              const port = parseInt(value.toString(), 10);
+              return !isNaN(port) && port >= 1 && port <= 65535;
+            }
+          );
+          break;
+
+        case "boolean":
+          result[envName] = validateEnv(
+            envName,
+            type,
+            defaultValue,
+            (value) => value === true || value === false
+          );
+          break;
+
+        case "array":
+          result[envName] = validateEnv(envName, type, defaultValue, (value) =>
+            Array.isArray(value)
+          );
+          break;
+
+        case "object":
+          result[envName] = validateEnv(
+            envName,
+            type,
+            defaultValue,
+            (value) => {
+              try {
+                JSON.parse(value.toString());
+                return true;
+              } catch (error) {
+                return false;
+              }
+            }
+          );
+          break;
+
+        case "string":
+          result[envName] = validateEnv(envName, type, defaultValue);
+          break;
+
+        default:
+          throw new Error(`Unsupported data type: ${type}`);
       }
-
-      let validate;
-
-      if (typeof type === "number") {
-        // Handle numbers
-        validate = validateEnv<number>(envName, type, (value) => {
-          const port = parseInt(value, 10);
-          return !isNaN(port) && port >= 1 && port <= 65535;
-        });
-      } else if (typeof type === "boolean") {
-        // Handle booleans
-        validate = validateEnv<boolean>(
-          envName,
-          type,
-          (value) => value === "true" || value === "false"
-        );
-      } else if (Array.isArray(type)) {
-        // Handle arrays
-        validate = validateEnv<string[]>(envName, type, (value) =>
-          Array.isArray(value.split(","))
-        );
-      } else if (typeof type === "object") {
-        // Handle objects (JSON)
-        validate = validateEnv<object>(envName, type, (value) => {
-          try {
-            JSON.parse(value);
-            return true;
-          } catch (error) {
-            return false;
-          }
-        });
-      } else {
-        // Default: treat as string
-        validate = validateEnv<string>(envName, type);
-      }
-
-      result[envName] = validate;
     }
   }
 
-  return result as EnvConfig<T>;
+  return result;
 };
 
-const envConfig = envGuard({
-  SECRET_KEY: "string",
-  API_KEY: "string",
-  ENABLE_FEATURE: "boolean",
-  DEBUG_MODE: "boolean",
-  CONFIG_JSON: "json",
-  TAGS: "array",
-  PORT: "number",
-});
-
-console.log("SECRET_KEY:", envConfig.SECRET_KEY);
-console.log("API_KEY:", envConfig.API_KEY);
-console.log("PORT:", envConfig.PORT);
-console.log("PORT datatype:", typeof envConfig.PORT);
-// Export the envGuard const as the default export
 export default envGuard;
