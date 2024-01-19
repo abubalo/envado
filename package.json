@@ -6,7 +6,6 @@
   "main": "dist/main.js",
   "module": "dist/module.js",
   "types": "dist/types.d.ts",
-  "type": "module",
   "scripts": {
     "build": "parcel build",
     "watch": "parcel watch",

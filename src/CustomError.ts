@@ -1,7 +1,6 @@
 export class MissingEnvVariableError extends Error {
   constructor(envName: string) {
     super(`No environment variable matches "${envName}" in .env`);
-    // super(`Environment variable "${envName}" is missing`);
     this.name = "MissingEnvVariableError";
   }
 }

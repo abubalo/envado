@@ -14,3 +14,5 @@ console.log("SECRET_KEY:", envConfig.SECRET_KEY);
 console.log("API_KEY:", envConfig.API_KEY);
 console.log("PORT:", envConfig.PORT);
 console.log("PORT datatype:", typeof envConfig.PORT);
+console.log("Tags datatype:", typeof envConfig.TAGS);
+console.log("DEBUG_MODE datatype:", typeof envConfig.DEBUG_MODE);
