@@ -147,10 +147,10 @@ import envguard from "envguard";
 try {
   // Define the expected environment variables and their types
   const envConfig = envguard({
-    SECRET_KEY: "string",
-    API_KEY: "string",
-    PORT: "number",
-    DB_PORT: "number",
+    SECRET_KEY: { type: "string" },
+    API_KEY: { type: "string" },
+    PORT: { type: "number" },
+    DB_PORT: { type: "number" },
   });
 
   // Access validated environment variables
