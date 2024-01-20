@@ -1,110 +1,143 @@
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 import {
   InvalidEnvVariableError,
   MissingEnvVariableError,
-} from './CustomError';
+} from "./CustomError";
 
 dotenv.config();
 
-type ConfigType = 'number' | 'string' | 'object' | 'array' | 'boolean';
+type AcceptedTypes = "number" | "string" | "object" | "array" | "boolean";
 
-type Config<T extends ConfigType> = {
+type Config<T extends AcceptedTypes> = {
   type: T;
-  defaultValue?: T extends 'number'
+  defaultValue?: T extends "number"
     ? number
-    : T extends 'string'
+    : T extends "string"
     ? string
-    : T extends 'object'
+    : T extends "object"
     ? object
-    : T extends 'array'
-    ? T[]
-    : T extends 'boolean'
+    : T extends "array"
+    ? Array<T>
+    : T extends "boolean"
     ? boolean
     : never;
+
+    validator?: (value: any) => boolean
 };
 
 type EnvGuardResult<T extends Record<string, Config<any>>> = {
-  [K in keyof T]: T[K]['defaultValue'] extends undefined
-    ? T[K]['type'] extends 'number'
+  [K in keyof T]: T[K]["defaultValue"] extends undefined
+    ? T[K]["type"] extends "number"
       ? number
-      : T[K]['type'] extends 'string'
+      : T[K]["type"] extends "string"
       ? string
-      : T[K]['type'] extends 'object'
+      : T[K]["type"] extends "object"
       ? object
-      : T[K]['type'] extends 'array'
+      : T[K]["type"] extends "array"
       ? any[]
-      : T[K]['type'] extends 'boolean'
+      : T[K]["type"] extends "boolean"
       ? boolean
       : never
-    : T[K]['defaultValue'];
+    : T[K]["defaultValue"];
 };
 
 const loadEnv = (envName: string): string | undefined => {
   return process.env[envName];
 };
 
-const validateEnv = <T extends ConfigType>(
+const validateEnv = <T extends AcceptedTypes>(
   envName: string,
-  _type: T,
-  defaultValue?: Config<T>['defaultValue'],
-  validator?: (value: Config<T>['defaultValue'] | string | number | boolean | object) => boolean,
-): Config<T>['defaultValue'] => {
-  const rawValue = loadEnv(envName) || defaultValue;
+  type: T,
+  defaultValue?: Config<T>["defaultValue"],
+  validator?: Config<T>["validator"]
+): Config<T>["defaultValue"] => {
+  const rawValue = defaultValue ?? loadEnv(envName);
 
   if (rawValue === undefined) {
-    throw new MissingEnvVariableError(envName);
+    throw new MissingEnvVariableError(
+      `No environment variable matches "${envName}" in .env`
+    );
   }
 
-  if (validator && !validator(rawValue)) {
-    throw new InvalidEnvVariableError(envName, rawValue.toString());
+  if (typeof rawValue !== type) {
+    throw new InvalidEnvVariableError(
+      `Expected type ${type}, but got ${typeof rawValue}`
+    );
   }
 
-  return rawValue as Config<T>['defaultValue']; // Explicitly cast to the correct type
+  const typedValue = rawValue as Config<T>["defaultValue"];
+
+  if (validator && !validator(typedValue)) {
+    throw new InvalidEnvVariableError(
+      `Environment variable "${envName}" is invalid`
+    );
+  }
+
+  return rawValue as Config<T>["defaultValue"];
 };
 
 const envGuard = <T extends Record<string, Config<any>>>(
-  config: T,
+  config: T
 ): EnvGuardResult<T> => {
-  const result: any = {} ;
+  const result: any = {};
 
-  for (const envName in config) {
-    if (config.hasOwnProperty(envName)) {
-      const { type, defaultValue } = config[envName];
+  for (const [envName, { type, defaultValue }] of Object.entries(config)) {
+    switch (type) {
+      case "number":
+        result[envName] = validateEnv(
+          envName,
+          type,
+          defaultValue,
+          (value: number | string) => {
+            const parsedValue =
+              typeof value === "string" ? parseInt(value, 10) : value;
+            return (
+              !isNaN(parsedValue) && parsedValue >= 1 && parsedValue <= 65535
+            );
+          }
+        );
+        break;
 
-      switch (type) {
-        case 'number':
-          result[envName] = validateEnv(envName, type, defaultValue, (value) => {
-            const port = parseInt(value as string, 10);
-            return !isNaN(port) && port >= 1 && port <= 65535;
-          }) ;
-          break;
+      case "boolean":
+        result[envName] = validateEnv(
+          envName,
+          type,
+          defaultValue,
+          (value: boolean) => value === true || value === false
+        );
+        break;
 
-        case 'boolean':
-          result[envName] = validateEnv(envName, type, defaultValue, (value) => value === true || value === false);
-          break;
+      case "array":
+        result[envName] = validateEnv(
+          envName,
+          type,
+          defaultValue,
+          (value: Array<unknown>) => Array.isArray(value)
+        );
+        break;
 
-        case 'array':
-          result[envName] = validateEnv(envName, type, defaultValue, (value) => Array.isArray(value)) as T[];
-          break;
-
-        case 'object':
-          result[envName] = validateEnv(envName, type, defaultValue, (value) => {
+      case "object":
+        result[envName] = validateEnv(
+          envName,
+          type,
+          defaultValue,
+          (value: string) => {
             try {
-              JSON.parse(value as string);
+              JSON.parse(value);
               return true;
             } catch (error) {
               return false;
             }
-          });
-          break;
+          }
+        );
+        break;
 
-        case 'string':
-          result[envName] = validateEnv(envName, type, defaultValue);
-          break;
+      case "string":
+        result[envName] = validateEnv(envName, type, defaultValue);
+        break;
 
-        default:
-          throw new Error(`Unsupported data type: ${type}`);
-      }
+      default:
+        throw new Error(`Unsupported data type: ${type}`);
     }
   }
 
