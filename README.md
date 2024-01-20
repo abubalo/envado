@@ -1,43 +1,64 @@
 ## EnvGuard
 
- EnvGuard is a lightweight and type-safe Node.js library designed to streamline the validation and retrieval of environment variables. It supports a variety of validation types, including strings, numbers, and booleans. It also provides a convenient way to parse and validate environment variables that contain JSON, URLs, and email addresses.
+EnvGuard is a lightweight and type-safe Node.js library designed to streamline the validation and retrieval of environment variables. It supports a variety of validation types, including strings, numbers, and booleans.
+
+ <!-- It also provides a convenient way to parse and validate environment variables that contain JSON, URLs, and email addresses. -->
 
 **Key Features**
 
 - Type-safe environment variable validation
-- Auto-completion and type checking
+- Auto-completion and type-checking
 - Dynamic configuration for environment variables
 - Lightweight and easy to integrate
 
 **Installation**
 
 ```sh
-npm i envguard
+npm i --save-dev envguard
 ```
 
 or
 
 ```sh
-yarn add evnguard
+yarn add -D evnguard
 ```
 
 **Usage**
 
 To use the library, make sure you have your `.env` file in the project root directory. Simply call the `envguard` function with an object that defines the environment variables that you need to validate and load. For example:
 
+```ts
+import envguard from "envguard";
+
+const evn = envguard({
+  API_KEY: { type: "string" },
+  PORT: { type: "number" },
+});
+```
+
+### Setting Default value
+
+You can set the default value for the environment, which will override the value in the `.env` file. I would advise you to be careful when setting the default value because you're exposing the configuration of your application and it can lead to security concerns unless it is intended to be public. For example:
+
+```js
+const evn = envguard({
+  PUBLIC_URL: { type: "string" defaultValue: "https://example.com" },
+});
+```
+
 EnvGuard supports several validation types to ensure that your environment variables have the expected format. Here are examples of how to use each validation type:
 
 ### `string`
 
-```js
+```ts
 const evn = envguard({
-  API_KEY: "string",
-  USERNAME: "string",
+  API_KEY: { type: "string" },
+  JWT_SECRET: {type: "string" },
 });
 
 // Access the validated values
 const apiKey = evn.API_KEY; // A string
-const username = evn.USERNAME; // A string
+const jwtSecret = evn.JWT_SECRET; // A string
 ```
 
 ### `number`
@@ -70,8 +91,8 @@ const debugMode = evn.DEBUG_MODE; // A boolean
 
 ```js
 const evn = envguard({
-  CONFIG_JSON: "json",
-  SETTINGS_JSON: "json",
+  CONFIG_JSON: { type: "json" },
+  SETTINGS_JSON: { type: "json" },
 });
 
 // Access the validated values
@@ -83,8 +104,8 @@ const settings = evn.SETTINGS_JSON; // A parsed JSON object
 
 ```js
 const evn = envguard({
-  TAGS: "array",
-  IDS: "array",
+  TAGS: { type: "array" },
+  IDS: { type: "array" },
 });
 
 // Access the validated values
@@ -96,8 +117,8 @@ const ids = evn.IDS; // An array
 
 ```js
 const evn = envguard({
-  USER_PROFILE: "object",
-  SYSTEM_CONFIG: "object",
+  USER_PROFILE: { type: "object" },
+  SYSTEM_CONFIG: { type: "object" },
 });
 
 // Access the validated values
