@@ -38,7 +38,7 @@ const evn = envguard({
 
 ### Setting Default value
 
-You can set the default value for the environment, which will override the value in the `.env` file. I would advise you to be careful when setting the default value because you're exposing the configuration of your application and it can lead to security concerns unless it is intended to be public. For example:
+You can set the default value for the environment, which will be the fallback value when the value in the `.env` is undefined. I would advise you to be careful when setting the default value because you're exposing the configuration of your application and it can lead to security concerns unless it is intended to be public. For example:
 
 ```js
 const evn = envguard({
