@@ -21,9 +21,10 @@ type Config<T extends AcceptedTypes> = {
     : T extends "boolean"
     ? boolean
     : never;
+
+    validator?: (value: T | undefined) => T
 };
 
-// Modify the EnvGuardResult type to accept both boolean and validated value
 type EnvGuardResult<T extends Record<string, Config<any>>> = {
   [K in keyof T]: T[K]["defaultValue"] extends undefined
     ? T[K]["type"] extends "number"
@@ -35,7 +36,7 @@ type EnvGuardResult<T extends Record<string, Config<any>>> = {
       : T[K]["type"] extends "array"
       ? any[]
       : T[K]["type"] extends "boolean"
-      ? boolean | T[K]["type"] // Change here to accept boolean or validated value
+      ? boolean | T[K]["type"]
       : never
     : T[K]["defaultValue"];
 };
@@ -48,17 +49,15 @@ const validateNumber = (value: number | string): number => {
   const parsedValue = typeof value === "string" ? parseInt(value, 10) : value;
   return parsedValue;
 };
-// Modify the validateBoolean function to return boolean or validated value
+
 const validateBoolean = (value: boolean): boolean | boolean => value;
 
-// Modify the validateArray function to return array or validated value
 const validateArray = (
   value: Array<unknown> | string
 ): Array<unknown> | Array<unknown> => {
   if (Array.isArray(value)) {
     return value;
   } else if (typeof value === "string") {
-    // Assuming values are comma-separated
     const valuesArray = value.split(",");
     return valuesArray;
   } else {
@@ -66,7 +65,6 @@ const validateArray = (
   }
 };
 
-// Modify the validateObject function to return object or validated value
 const validateObject = (value: string): object | object => {
   try {
     if (typeof value === "string") {
@@ -78,12 +76,11 @@ const validateObject = (value: string): object | object => {
   }
 };
 
-// Modify the validateEnv function to return the validated value
 const validateEnv = <T extends AcceptedTypes>(
   envName: string,
   type: T,
   defaultValue?: Config<T>["defaultValue"],
-  validator?: (value: any) => T // Change the return type of the validator to T
+  validator?: Config<T>["validator"]
 ): Config<T>["defaultValue"] => {
   const rawValue = loadEnv(envName) ?? defaultValue;
 
@@ -94,7 +91,7 @@ const validateEnv = <T extends AcceptedTypes>(
   }
 
   if (validator) {
-    const validatedValue = validator(rawValue);
+    const validatedValue = validator(rawValue as any);
     if (validatedValue === undefined && typeof validatedValue !== type) {
       throw new InvalidEnvVariableError(
         `Invalid default value type for ${envName}. Expected type: ${type}`
