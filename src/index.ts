@@ -49,32 +49,31 @@ const validateEnv = <T extends AcceptedTypes>(
   defaultValue?: Config<T>["defaultValue"],
   validator?: (value: T | undefined) => T
 ): T => {
-  const rawValue = loadEnv(envName) ?? defaultValue;
+  let rawValue = loadEnv(envName) ?? defaultValue;
+  let validatedValue = rawValue;
 
-  if (!validator) {
-    throw Error(
-      `Validator function is required for environment variable "${envName}"`
-    );
-  }
+  if (validator) {
+    validatedValue = validator(rawValue as any);
 
-  const validatedValue = validator(rawValue as any);
-
-  if (typeof validatedValue !== type) {
-    throw new InvalidEnvVariableError(
-      `Invalid type for ${envName}. Expected type: ${type} but got ${typeof validatedValue}`
-    );
-  } else if (type === "array") {
-    if (!Array.isArray(validatedValue)) {
-      throw new InvalidEnvVariableError(
-        `Invalid type for ${envName}. Expected type: ${type} but got ${typeof validatedValue}`
-      );
+    if (type === "array") {
+      if (!Array.isArray(validatedValue)) {
+        throw new InvalidEnvVariableError(
+          `Invalid type for ${envName}. Expected type: ${type} but got ${typeof validatedValue}`
+        );
+      } else if (typeof validatedValue !== type) {
+        throw new InvalidEnvVariableError(
+          `Invalid type for ${envName}. Expected type: ${type} but got ${typeof validatedValue}`
+        );
+      }
     }
+
+    validatedValue;
   }
 
-  return validatedValue as unknown as T;
+  return validatedValue as T;
 };
 
-const validateNumber = (value: number | string): number => {
+const validateNumber = (value: number): number => {
   const parsedValue = typeof value === "string" ? parseInt(value, 10) : value;
   return parsedValue;
 };
