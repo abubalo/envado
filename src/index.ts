@@ -54,7 +54,7 @@ const validateBoolean = (value: boolean): boolean => value;
 
 const validateArray = (
   value: Array<unknown> | string
-): Array<unknown> | Array<unknown> => {
+): Array<unknown>  => {
   if (Array.isArray(value)) {
     return value;
   } else if (typeof value === "string") {
@@ -65,7 +65,7 @@ const validateArray = (
   }
 };
 
-const validateObject = (value: string): object | object => {
+const validateObject = (value: string): object  => {
   try {
     if (typeof value === "string") {
       return JSON.parse(value);
