@@ -49,7 +49,7 @@ const validateEnv = <T extends AcceptedTypes>(
   defaultValue?: Config<T>["defaultValue"],
   validator?: (value: T | undefined) => T
 ): T => {
-  let rawValue = loadEnv(envName) ?? defaultValue;
+  const rawValue = loadEnv(envName) ?? defaultValue;
   let validatedValue = rawValue;
 
   if (validator) {
