@@ -21,8 +21,6 @@ type Config<T extends AcceptedTypes> = {
     : T extends "boolean"
     ? boolean
     : never;
-
-  validator?: (value: T | undefined) => T;
 };
 
 type EnvGuardResult<T extends Record<string, Config<AcceptedTypes>>> = {
@@ -52,9 +50,7 @@ const validateNumber = (value: number | string): number => {
 
 const validateBoolean = (value: boolean): boolean => value;
 
-const validateArray = (
-  value: Array<unknown> | string
-): Array<unknown>  => {
+const validateArray = (value: Array<unknown> | string): Array<unknown> => {
   if (Array.isArray(value)) {
     return value;
   } else if (typeof value === "string") {
@@ -65,7 +61,7 @@ const validateArray = (
   }
 };
 
-const validateObject = (value: string): object  => {
+const validateObject = (value: string): object => {
   try {
     if (typeof value === "string") {
       return JSON.parse(value);
@@ -80,13 +76,13 @@ const validateEnv = <T extends AcceptedTypes>(
   envName: string,
   type: T,
   defaultValue?: Config<T>["defaultValue"],
-  validator?: Config<T>["validator"]
+  validator?: (value: T | undefined) => T
 ): Config<T>["defaultValue"] => {
   const rawValue = loadEnv(envName) ?? defaultValue;
 
   if (validator) {
     const validatedValue = validator(rawValue as any);
-  
+
     if (type === "array") {
       // Check if the validatedValue is an array
       if (!Array.isArray(validatedValue)) {
@@ -99,10 +95,9 @@ const validateEnv = <T extends AcceptedTypes>(
         `Invalid type for ${envName}. Expected type: ${type} but got ${typeof validatedValue}`
       );
     }
-  
+
     return validatedValue as unknown as Config<T>["defaultValue"];
   }
-  
 
   return rawValue as Config<T>["defaultValue"];
 };
