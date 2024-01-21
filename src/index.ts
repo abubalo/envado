@@ -43,35 +43,6 @@ const loadEnv = (envName: string): string | undefined => {
   return process.env[envName];
 };
 
-const validateNumber = (value: number | string): number => {
-  const parsedValue = typeof value === "string" ? parseInt(value, 10) : value;
-  return parsedValue;
-};
-
-const validateBoolean = (value: boolean): boolean => value;
-
-const validateArray = (value: Array<unknown> | string): Array<unknown> => {
-  if (Array.isArray(value)) {
-    return value;
-  } else if (typeof value === "string") {
-    const valuesArray = value.split(",");
-    return valuesArray;
-  } else {
-    return [];
-  }
-};
-
-const validateObject = (value: string): object => {
-  try {
-    if (typeof value === "string") {
-      return JSON.parse(value);
-    }
-    return {};
-  } catch (error) {
-    return {};
-  }
-};
-
 const validateEnv = <T extends AcceptedTypes>(
   envName: string,
   type: T,
@@ -101,6 +72,36 @@ const validateEnv = <T extends AcceptedTypes>(
 
   return rawValue as Config<T>["defaultValue"];
 };
+
+const validateNumber = (value: number | string): number => {
+  const parsedValue = typeof value === "string" ? parseInt(value, 10) : value;
+  return parsedValue;
+};
+
+const validateBoolean = (value: boolean): boolean => value;
+
+const validateArray = (value: Array<unknown> | string): Array<unknown> => {
+  if (Array.isArray(value)) {
+    return value;
+  } else if (typeof value === "string") {
+    const valuesArray = value.split(",");
+    return valuesArray;
+  } else {
+    return [];
+  }
+};
+
+const validateObject = (value: string): object => {
+  try {
+    if (typeof value === "string") {
+      return JSON.parse(value);
+    }
+    return {};
+  } catch (error) {
+    return {};
+  }
+};
+
 
 const envGuard = <T extends Record<string, Config<any>>>(
   config: T
