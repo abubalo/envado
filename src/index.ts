@@ -22,10 +22,10 @@ type Config<T extends AcceptedTypes> = {
     ? boolean
     : never;
 
-    validator?: (value: T | undefined) => T
+  validator?: (value: T | undefined) => T;
 };
 
-type EnvGuardResult<T extends Record<string, Config<any>>> = {
+type EnvGuardResult<T extends Record<string, Config<AcceptedTypes>>> = {
   [K in keyof T]: T[K]["defaultValue"] extends undefined
     ? T[K]["type"] extends "number"
       ? number
@@ -84,22 +84,25 @@ const validateEnv = <T extends AcceptedTypes>(
 ): Config<T>["defaultValue"] => {
   const rawValue = loadEnv(envName) ?? defaultValue;
 
-  if (rawValue === undefined) {
-    throw new MissingEnvVariableError(
-      `No environment variable matches "${envName}" in .env`
-    );
-  }
-
   if (validator) {
     const validatedValue = validator(rawValue as any);
-    if (validatedValue === undefined && typeof validatedValue !== type) {
+  
+    if (type === "array") {
+      // Check if the validatedValue is an array
+      if (!Array.isArray(validatedValue)) {
+        throw new InvalidEnvVariableError(
+          `Invalid type for ${envName}. Expected type: ${type} but got ${typeof validatedValue}`
+        );
+      }
+    } else if (typeof validatedValue !== type) {
       throw new InvalidEnvVariableError(
-        `Invalid default value type for ${envName}. Expected type: ${type}`
+        `Invalid type for ${envName}. Expected type: ${type} but got ${typeof validatedValue}`
       );
     }
-
+  
     return validatedValue as unknown as Config<T>["defaultValue"];
   }
+  
 
   return rawValue as Config<T>["defaultValue"];
 };
