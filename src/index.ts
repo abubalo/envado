@@ -50,7 +50,7 @@ const validateNumber = (value: number | string): number => {
   return parsedValue;
 };
 
-const validateBoolean = (value: boolean): boolean | boolean => value;
+const validateBoolean = (value: boolean): boolean => value;
 
 const validateArray = (
   value: Array<unknown> | string
