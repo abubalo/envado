@@ -10,16 +10,8 @@ type AcceptedTypes = "number" | "string" | "object" | "array" | "boolean";
 
 type Config<T extends AcceptedTypes> = {
   type: T;
-  defaultValue?: T extends "number"
-    ? number
-    : T extends "string"
-    ? string
-    : T extends "object"
-    ? object
-    : T extends "array"
-    ? Array<T>
-    : T extends "boolean"
-    ? boolean
+  defaultValue?: T extends number | string | Array<unknown> | object
+    ? T
     : never;
 };
 
@@ -32,7 +24,7 @@ type EnvGuardResult<T extends Record<string, Config<AcceptedTypes>>> = {
       : T[K]["type"] extends "object"
       ? object
       : T[K]["type"] extends "array"
-      ? any[]
+      ? unknown[]
       : T[K]["type"] extends "boolean"
       ? boolean | T[K]["type"]
       : never
@@ -47,31 +39,36 @@ const validateEnv = <T extends AcceptedTypes>(
   envName: string,
   type: T,
   defaultValue?: Config<T>["defaultValue"],
-  validator?: (value: T | undefined) => T
+  validator?: (value: T | string | undefined) => T
 ): T => {
   const rawValue = loadEnv(envName) ?? defaultValue;
   let validatedValue = rawValue;
 
+  if (rawValue === undefined) {
+    throw new MissingEnvVariableError(
+      `No environment variable matches "${envName}" in .env`
+    );
+  }
+
+
   if (validator) {
-    validatedValue = validator(rawValue as any);
+    validatedValue = validator(rawValue);
+  }
 
-    if (type === "array") {
-      if (!Array.isArray(validatedValue)) {
-        throw new InvalidEnvVariableError(
-          `Invalid type for ${envName}. Expected type: ${type} but got ${typeof validatedValue}`
-        );
-      } else if (typeof validatedValue !== type) {
-        throw new InvalidEnvVariableError(
-          `Invalid type for ${envName}. Expected type: ${type} but got ${typeof validatedValue}`
-        );
-      }
-    }
-
-    validatedValue;
+  if (typeof validatedValue !== type && type !== "array") {
+    throw new InvalidEnvVariableError(
+      `Invalid typesss for '${envName}'. Expected type: ${type} but got ${typeof validatedValue}`
+    );
+  } else if (type === "array" && !Array.isArray(validatedValue)) {
+    throw new InvalidEnvVariableError(
+      `Invalid type for '${envName}'. Expected type: ${type} but got ${typeof validatedValue}`
+    );
   }
 
   return validatedValue as T;
 };
+
+
 
 const validateNumber = (value: number): number => {
   const parsedValue = typeof value === "string" ? parseInt(value, 10) : value;
