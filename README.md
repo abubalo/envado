@@ -133,7 +133,7 @@ import envado from "envado";
 
 try {
   // Define the expected environment variables and their types
-  const envConfig = envado({
+  const env = envado({
     SECRET_KEY: { type: "string" },
     API_KEY: { type: "string" },
     PORT: { type: "number" },
@@ -141,8 +141,8 @@ try {
   });
 
   // Access validated environment variables
-  const secretKey = envConfig.SECRET_KEY;
-  const port = envConfig.PORT;
+  const secretKey = env.SECRET_KEY;
+  const port = env.PORT;
 
   console.log(
     "Environment variables have been successfully loaded and validated:"
