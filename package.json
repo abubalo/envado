@@ -1,7 +1,8 @@
 {
-  "name": "envguard",
+  "name": "envado",
   "version": "1.0.0",
-  "description": "",
+  "description": "A simple, ultra-lightweight, and type-safe environment variable validation library for node.js",
+  "repository": "git@github.com:abubalo/envado.git",
   "source": "src/index.ts",
   "main": "dist/main.js",
   "module": "dist/module.js",
@@ -27,13 +28,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@parcel/watcher": "^2.4.0",
     "@types/node": "^20.8.10",
     "dotenv": "^16.3.1",
     "parcel": "^2.11.0",
+    "tsup": "^8.0.1",
     "typescript": "^5.2.2",
     "vitest": "^0.34.6"
   },
   "devDependencies": {
+    "@parcel/packager-ts": "2.11.0",
     "@parcel/transformer-typescript-types": "2.11.0"
   }
 }
