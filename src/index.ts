@@ -8,7 +8,7 @@ dotenv.config();
 
 type AcceptedTypes = "number" | "string" | "object" | "array" | "boolean";
 
-type Config<T extends AcceptedTypes> = {
+type Config<T> = {
   type: T;
   defaultValue?: T extends number | string | Array<unknown> | object
     ? T
