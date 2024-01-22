@@ -20,6 +20,6 @@
     "rootDir": "./src",
     "outDir": "./dist"
   },
-  "include": ["src/**/*.ts", "example/temp.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules/"]
 }
