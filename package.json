@@ -12,19 +12,28 @@
     "test": "vitest"
   },
   "keywords": [
-    "env", "env-validate", "enviroment variable", "enviroment variable validator", "enviroment variable validation", "validate env", "env-validation", "dotenv", "dotenv validator",".env validator", "evnguard"
+    "env",
+    "env-validate",
+    "enviroment variable",
+    "enviroment variable validator",
+    "enviroment variable validation",
+    "validate env",
+    "env-validation",
+    "dotenv",
+    "dotenv validator",
+    ".env validator",
+    "evnguard"
   ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@types/node": "^20.8.10",
     "dotenv": "^16.3.1",
-    "parcel": "^2.10.1",
+    "parcel": "^2.11.0",
     "typescript": "^5.2.2",
     "vitest": "^0.34.6"
   },
   "devDependencies": {
-    "@parcel/packager-ts": "2.10.1",
-    "@parcel/transformer-typescript-types": "2.10.1"
+    "@parcel/transformer-typescript-types": "2.11.0"
   }
 }
