@@ -70,12 +70,12 @@ const validateEnv = <T extends AcceptedTypes>(
 
 
 
-const validateNumber = (value: number): number => {
+const validateNumber = (value: number | string): number => {
   const parsedValue = typeof value === "string" ? parseInt(value, 10) : value;
   return parsedValue;
 };
 
-const validateBoolean = (value: boolean): boolean => value;
+const validateBoolean = (value: boolean | string): boolean => Boolean(value);
 
 const validateArray = (value: Array<unknown> | string): Array<unknown> => {
   if (Array.isArray(value)) {
