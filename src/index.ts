@@ -15,7 +15,7 @@ type Config<T> = {
     : never;
 };
 
-type EnvGuardResult<T extends Record<string, Config<AcceptedTypes>>> = {
+type EnvShieldResult<T extends Record<string, Config<AcceptedTypes>>> = {
   [K in keyof T]: T[K]["defaultValue"] extends undefined
     ? T[K]["type"] extends "number"
       ? number
@@ -99,10 +99,10 @@ const validateObject = (value: string): object => {
   }
 };
 
-const envGuard = <T extends Record<string, Config<any>>>(
+const envShield = <T extends Record<string, Config<any>>>(
   config: T
-): EnvGuardResult<T> => {
-  const result: EnvGuardResult<any> = {};
+): EnvShieldResult<T> => {
+  const result: EnvShieldResult<any> = {};
 
   for (const [envName, { type, defaultValue }] of Object.entries(config)) {
     try {
@@ -169,4 +169,4 @@ const envGuard = <T extends Record<string, Config<any>>>(
   return result;
 };
 
-export default envGuard;
+export default envShield;

@@ -1,6 +1,6 @@
-## EnvGuard
+## Envshield
 
-EnvGuard is a lightweight and type-safe Node.js library designed to streamline the validation and retrieval of environment variables. It supports a variety of validation types, including strings, numbers, and booleans.
+Envshield is a lightweight and type-safe Node.js library designed to streamline the validation and retrieval of environment variables. It supports a variety of validation types, including strings, numbers, and booleans.
 
  <!-- It also provides a convenient way to parse and validate environment variables that contain JSON, URLs, and email addresses. -->
 
@@ -14,7 +14,7 @@ EnvGuard is a lightweight and type-safe Node.js library designed to streamline t
 **Installation**
 
 ```sh
-npm i --save-dev envguard
+npm i --save-dev envshield
 ```
 
 or
@@ -25,12 +25,12 @@ yarn add -D evnguard
 
 **Usage**
 
-To use the library, make sure you have your `.env` file in the project root directory. Simply call the `envguard` function with an object that defines the environment variables that you need to validate and load. For example:
+To use the library, make sure you have your `.env` file in the project root directory. Simply call the `envshield` function with an object that defines the environment variables that you need to validate and load. For example:
 
 ```ts
-import envguard from "envguard";
+import envshield from "envshield";
 
-const evn = envguard({
+const evn = envshield({
   API_KEY: { type: "string" },
   PORT: { type: "number" },
 });
@@ -41,17 +41,17 @@ const evn = envguard({
 You can set the default value for the environment, which will be the fallback value when the value in the `.env` is undefined. I would advise you to be careful when setting the default value because you're exposing the configuration of your application and it can lead to security concerns unless it is intended to be public. For example:
 
 ```js
-const evn = envguard({
+const evn = envshield({
   PUBLIC_URL: { type: "string" defaultValue: "https://example.com" },
 });
 ```
 
-EnvGuard supports several validation types to ensure that your environment variables have the expected format. Here are examples of how to use each validation type:
+Envshield supports several validation types to ensure that your environment variables have the expected format. Here are examples of how to use each validation type:
 
 ### `string`
 
 ```ts
-const evn = envguard({
+const evn = envshield({
   API_KEY: { type: "string" },
   JWT_SECRET: {type: "string" },
 });
@@ -64,7 +64,7 @@ const jwtSecret = evn.JWT_SECRET; // A string
 ### `number`
 
 ```js
-const evn = envguard({
+const evn = envshield({
   PORT: "number",
   TIMEOUT: "number",
 });
@@ -77,7 +77,7 @@ const timeout = evn.TIMEOUT; // A number
 ### `boolean`
 
 ```js
-const evn = envguard({
+const evn = envshield({
   ENABLE_FEATURE: "boolean",
   DEBUG_MODE: "boolean",
 });
@@ -90,7 +90,7 @@ const debugMode = evn.DEBUG_MODE; // A boolean
 ### `json`
 
 ```js
-const evn = envguard({
+const evn = envshield({
   CONFIG_JSON: { type: "json" },
   SETTINGS_JSON: { type: "json" },
 });
@@ -103,7 +103,7 @@ const settings = evn.SETTINGS_JSON; // A parsed JSON object
 ### `array`
 
 ```js
-const evn = envguard({
+const evn = envshield({
   TAGS: { type: "array" },
   IDS: { type: "array" },
 });
@@ -116,7 +116,7 @@ const ids = evn.IDS; // An array
 ### `object`
 
 ```js
-const evn = envguard({
+const evn = envshield({
   USER_PROFILE: { type: "object" },
   SYSTEM_CONFIG: { type: "object" },
 });
@@ -139,14 +139,14 @@ The following validation types are supported:
 
 **Error Handling**
 
-If the `envguard` function detects an invalid environment variable, it will throw an error. You can handle these errors however you like. For example, you could log the error and exit the application.
+If the `envshield` function detects an invalid environment variable, it will throw an error. You can handle these errors however you like. For example, you could log the error and exit the application.
 
 ```ts
-import envguard from "envguard";
+import envshield from "envshield";
 
 try {
   // Define the expected environment variables and their types
-  const envConfig = envguard({
+  const envConfig = envshield({
     SECRET_KEY: { type: "string" },
     API_KEY: { type: "string" },
     PORT: { type: "number" },
