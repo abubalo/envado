@@ -38,7 +38,7 @@ const evn = envado({
 
 ### Setting Default value
 
-You can set the default value for the environment, which will be the fallback value when the value in the `.env` is undefined. I would advise you to be careful when setting the default value because you're exposing the configuration of your application and it can lead to security concerns unless it is intended to be public. For example:
+You can set the default value for the environment, which will be the fallback value when the value in the `.env` is undefined. For example:
 
 ```js
 const evn = envado({
@@ -87,18 +87,6 @@ const enableFeature = evn.ENABLE_FEATURE; // A boolean
 const debugMode = evn.DEBUG_MODE; // A boolean
 ```
 
-### `json`
-
-```js
-const evn = envado({
-  CONFIG_JSON: { type: "json" },
-  SETTINGS_JSON: { type: "json" },
-});
-
-// Access the validated values
-const config = evn.CONFIG_JSON; // A parsed JSON object
-const settings = evn.SETTINGS_JSON; // A parsed JSON object
-```
 
 ### `array`
 
@@ -133,7 +121,6 @@ The following validation types are supported:
 - `string`: Validates that the environment variable is a string.
 - `number`: Validates that the environment variable is a number.
 - `boolean`: Validates that the environment variable is a boolean.
-- `json`: Validates that the environment variable is a valid JSON object.
 - `array`: Validates that the environment variable is a valid array.
 - `object`: Validates that the environment variable is a valid object.
 
