@@ -15,7 +15,7 @@ type Config<T> = {
     : never;
 };
 
-type EnvShieldResult<T extends Record<string, Config<AcceptedTypes>>> = {
+type EnvadoResult<T extends Record<string, Config<AcceptedTypes>>> = {
   [K in keyof T]: T[K]["defaultValue"] extends undefined
     ? T[K]["type"] extends "number"
       ? number
@@ -50,16 +50,14 @@ const validateEnv = <T extends AcceptedTypes>(
     );
   }
 
-
   if (validator) {
     validatedValue = validator(rawValue);
   }
 
-  if (typeof validatedValue !== type && type !== "array") {
-    throw new InvalidEnvVariableError(
-      `Invalid typesss for '${envName}'. Expected type: ${type} but got ${typeof validatedValue}`
-    );
-  } else if (type === "array" && !Array.isArray(validatedValue)) {
+  if (
+    (typeof validatedValue !== type && type !== "array") ||
+    (type === "array" && !Array.isArray(validatedValue))
+  ) {
     throw new InvalidEnvVariableError(
       `Invalid type for '${envName}'. Expected type: ${type} but got ${typeof validatedValue}`
     );
@@ -67,8 +65,6 @@ const validateEnv = <T extends AcceptedTypes>(
 
   return validatedValue as T;
 };
-
-
 
 const validateNumber = (value: number | string): number => {
   const parsedValue = typeof value === "string" ? parseInt(value, 10) : value;
@@ -99,10 +95,10 @@ const validateObject = (value: string): object => {
   }
 };
 
-const envShield = <T extends Record<string, Config<any>>>(
+const envado = <T extends Record<string, Config<any>>>(
   config: T
-): EnvShieldResult<T> => {
-  const result: EnvShieldResult<any> = {};
+): EnvadoResult<T> => {
+  const result: EnvadoResult<any> = {};
 
   for (const [envName, { type, defaultValue }] of Object.entries(config)) {
     try {
@@ -169,4 +165,4 @@ const envShield = <T extends Record<string, Config<any>>>(
   return result;
 };
 
-export default envShield;
+export default envado;
