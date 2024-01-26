@@ -1,6 +1,6 @@
 ## Envado
 
-Envado is a lightweight and type-safe Node.js library designed to streamline the validation and retrieval of environment variables. It supports a variety of validation types, including strings, numbers, and booleans.
+Envado is a type-safe Node.js library designed to streamline the validation and retrieval of environment variables. It supports a variety of validation types, including strings, numbers, booleans and more.
 
  <!-- It also provides a convenient way to parse and validate environment variables that contain JSON, URLs, and email addresses. -->
 
@@ -13,14 +13,14 @@ Envado is a lightweight and type-safe Node.js library designed to streamline the
 
 **Installation**
 
-```sh
-npm i --save-dev envado
+```bash
+npm install envado
 ```
 
 or
 
-```sh
-yarn add -D envado
+```bash
+yarn add envado
 ```
 
 **Usage**
@@ -43,6 +43,9 @@ You can set the default value for the environment, which will be the fallback va
 ```js
 const evn = envado({
   PUBLIC_URL: { type: "string" defaultValue: "https://example.com" },
+  PORT: { type: "number" defaultValue: 5000 },
+  DEBUG_MODE: { type: "boolean" defaultValue: true },
+  TAGS: { type: "array", ["foo", "bar"] },
 });
 ```
 
