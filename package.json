@@ -1,8 +1,9 @@
 {
   "name": "envado",
-  "version": "1.0.0",
-  "description": "A simple, ultra-lightweight, and type-safe environment variable validation library for node.js",
+  "version": "1.0.2",
+  "description": "Safely validate your enviroment variable with ease",
   "repository": "git@github.com:abubalo/envado.git",
+  "author": "",
   "source": "src/index.ts",
   "main": "dist/main.js",
   "module": "dist/module.js",
@@ -13,26 +14,22 @@
     "test": "vitest"
   },
   "keywords": [
-    "env",
-    "env-validate",
+    ".env",
+    "envado",
     "enviroment variable",
     "enviroment variable validator",
     "enviroment variable validation",
-    "validate env",
-    "env-validation",
     "dotenv",
     "dotenv validator",
-    ".env validator",
-    "evnguard"
+    ".env validator"
   ],
-  "author": "",
-  "license": "ISC",
+
+  "license": "MIT",
   "dependencies": {
     "@parcel/watcher": "^2.4.0",
     "@types/node": "^20.8.10",
     "dotenv": "^16.3.1",
     "parcel": "^2.11.0",
-    "tsup": "^8.0.1",
     "typescript": "^5.2.2",
     "vitest": "^0.34.6"
   },
