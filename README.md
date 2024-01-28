@@ -30,7 +30,7 @@ To use the library, make sure you have your `.env` file in the project root dire
 ```ts
 import envado from "envado";
 
-const evn = envado({
+const env = envado({
   API_KEY: { type: "string" },
   PORT: { type: "number" },
 });
@@ -41,7 +41,7 @@ const evn = envado({
 You can set the default value for the environment, which will be the fallback value when the value in the `.env` is undefined. For example:
 
 ```js
-const evn = envado({
+const env = envado({
   PUBLIC_URL: { type: "string" defaultValue: "https://example.com" },
   PORT: { type: "number" defaultValue: 5000 },
   DEBUG_MODE: { type: "boolean" defaultValue: true },
@@ -54,67 +54,67 @@ Envado supports several validation types to ensure that your environment variabl
 ### `string`
 
 ```ts
-const evn = envado({
+const env = envado({
   API_KEY: { type: "string" },
   JWT_SECRET: {type: "string" },
 });
 
 // Access the validated values
-const apiKey = evn.API_KEY; // A string
-const jwtSecret = evn.JWT_SECRET; // A string
+const apiKey = env.API_KEY; // A string
+const jwtSecret = env.JWT_SECRET; // A string
 ```
 
 ### `number`
 
 ```js
-const evn = envado({
+const env = envado({
   PORT: "number",
   TIMEOUT: "number",
 });
 
 // Access the validated values
-const port = evn.PORT; // A number
-const timeout = evn.TIMEOUT; // A number
+const port = env.PORT; // A number
+const timeout = env.TIMEOUT; // A number
 ```
 
 ### `boolean`
 
 ```js
-const evn = envado({
+const env = envado({
   ENABLE_FEATURE: "boolean",
   DEBUG_MODE: "boolean",
 });
 
 // Access the validated values
-const enableFeature = evn.ENABLE_FEATURE; // A boolean
-const debugMode = evn.DEBUG_MODE; // A boolean
+const enableFeature = env.ENABLE_FEATURE; // A boolean
+const debugMode = env.DEBUG_MODE; // A boolean
 ```
 
 
 ### `array`
 
 ```js
-const evn = envado({
+const env = envado({
   TAGS: { type: "array" },
   IDS: { type: "array" },
 });
 
 // Access the validated values
-const tags = evn.TAGS; // An array
-const ids = evn.IDS; // An array
+const tags = env.TAGS; // An array
+const ids = env.IDS; // An array
 ```
 
 ### `object`
 
 ```js
-const evn = envado({
+const env = envado({
   USER_PROFILE: { type: "object" },
   SYSTEM_CONFIG: { type: "object" },
 });
 
 // Access the validated values
-const userProfile = evn.USER_PROFILE; // An object
-const systemConfig = evn.SYSTEM_CONFIG; // An object
+const userProfile = env.USER_PROFILE; // An object
+const systemConfig = env.SYSTEM_CONFIG; // An object
 ```
 
 **Validation Types**
