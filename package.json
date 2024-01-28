@@ -1,6 +1,6 @@
 {
   "name": "envado",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Safely validate your enviroment variable with ease",
   "repository": "git@github.com:abubalo/envado.git",
   "author": "",
@@ -14,14 +14,14 @@
     "test": "vitest"
   },
   "keywords": [
-    ".env",
-    "envado",
+    "env",
+    "enviroment",
     "enviroment variable",
-    "enviroment variable validator",
-    "enviroment variable validation",
+    "validator",
+    "validation",
     "dotenv",
     "dotenv validator",
-    ".env validator"
+    "typescript"
   ],
 
   "license": "MIT",
