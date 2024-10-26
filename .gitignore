@@ -30,5 +30,3 @@ dist-ssr
 .parcel-cache
 .cache
 
-#npm
-.npmignore
