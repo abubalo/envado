@@ -1,36 +1,38 @@
 {
   "name": "envado",
-  "version": "2.0.0",
-  "description": "Safely validate enviroment variables",
+  "version": "3.0.0",
+  "description": "Safely validate environment variables",
   "repository": "git@github.com:abubalo/envado.git",
   "author": "Abubakar Balogun",
   "source": "src/index.ts",
-  "main": "dist/main.js",
-  "module": "dist/module.js",
-  "types": "dist/types.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "parcel build",
-    "watch": "parcel watch",
+   "build": "tsup src/index.ts --format cjs,esm --minify --dts --sourcemap --target es2020 --clean",
     "test": "vitest"
   },
   "keywords": [
+    ".env",
+    "dotenv",
     "env",
-    "enviroment",
-    "enviroment variable",
+    "environment variable validator",
+    "env var",
+    "environment",
+    "environment variable",
     "validator",
     "validation",
-    "dotenv",
-    "dotenv validator",
-    "typescript"
+    "dotenv validator"
   ],
   "license": "MIT",
   "dependencies": {
-    "@types/node": "^20.12.4",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "@parcel/packager-ts": "^2.12.0",
-    "@parcel/transformer-typescript-types": "^2.12.0",
-    "typescript": "^5.4.5"
+    "@types/dotenv": "^8.2.3",
+    "@types/node": "^22.7.9",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.3"
   }
 }
