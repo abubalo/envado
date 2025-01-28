@@ -1,73 +1,174 @@
-## Envado
 
-Envado is a type-safe Node.js library created to streamline the validation and retrieval of environment variables. 
-<!-- It supports a variety of validation types, including strings, numbers, booleans and more. -->
+# Envado
 
- <!-- It also provides a convenient way to parse and validate environment variables that contain JSON, URLs, and email addresses. -->
+Envado is a lightweight and type-safe library for parsing and validating environment variables in both Node.js and browser environments. It provides a minimal yet powerful API, ensuring expressiveness without bloating your project.
 
-**Key Features**
+It is very minimal, ensures configuration is valid, reliable, and easy to manage, with TypeScript support for a seamless developer experience.
 
-- Type-safe environment variable validation
-- Auto-completion and type-checking
-- Dynamic configuration for environment variables
-- Lightweight and easy to integrate
 
-**Installation**
+### Supported data types
+- `string`
+- `number`
+- `array`
+- `object`
+
+## Features
+
+
+- **Type-safe**: Full TypeScript support with automatic type inference.
+- **Rich Validation**: Extensive built-in validators like ports, URL, emails, and more
+- **Customizable**: Extend functionality with your own validators and transformers.
+- **Environment Detection**: Built-in environment type helpers
+- **Lightweight**: Zero dependencies (except for optional [dotenv]("https://npmjs.com/package/dotenv) integration).
+- **Browser-Compactible**: Works seamlessly with bundlers like Vite, Webpack, and others.
+- **Environment Detection**: Easily differentiate between development, production, test, and other environments.
+
+## Installation
 
 ```bash
-npm install envado --save-dev
+npm install envado
 ```
 
-**Usage**
+## Quick Start
 
-To use the library, make sure you have your `.env` file in the project root directory. Simply call the `envado` function with an object that defines the environment variables that you need to validate and load. For example:
+```typescript
+import { validateEnv } from 'envado';
+
+const env = validateEnv(({string, number, array}) => ({
+  PORT: number(),
+  API_KEY: string(),
+  ALLOWED_ORIGINS: array<string>().commaSeparated(),
+  NODE_ENV: string()
+}));
+
+// TypeScript-safe access
+console.log(env.PORT); // number
+console.log(env.API_KEY); // string
+```
+
+## Built-in Validators
+
+### String
+```typescript
+string()
+  .email() // Validates international emails with punycode support
+  .url() // Ensures valid URL format
+  .min(length) // Minimum length
+  .max(length) // Maximum length
+  .oneOf(['a', 'b']) // Enumerated values
+```
+
+### Number
+```typescript
+number()
+  .port() // Valid TCP port (1-65535)
+  .min(value) // Minimum value
+  .max(value) // Maximum value
+```
+
+### Boolean
+```typescript
+boolean() // Converts "true", "1", "yes" → true
+         //         "false", "0", "no" → false
+```
+
+### Array
+```typescript
+array<T>()
+  .commaSeparated() // Parse from comma-separated string
+  .items(schema) // Validate each item
+  .min(length) // Minimum array length
+  .max(length) // Maximum array length
+```
+
+### Object
+```typescript
+object({
+  key: string(),
+  nested: object({...})
+}).strict() // No additional properties allowed
+```
+
+## Common Modifiers
+
+Every validator supports:
+
+```typescript
+.optional() // Make field optional
+.custom(value => string | undefined) // Custom validation
+.transform(value => newValue) // Custom transformation
+```
+
+## Environment Detection
+
+Envado makes it easy to determine the current environment:
 
 ```ts
-import envado from "envado";
+if (env.isDev) {
+  console.log("Running in development mode");
+}
+```
+Available properties:
 
-const env = envado({
-  API_KEY: { type: "string" },
-  PORT: { type: "number" },
-  DEBUG_MODE: "boolean",
-  TAGS: { type: "array" },
-  SERVER_CONFIG: {type: "object"}
+- `env.isDev` → `NODE_ENV === 'development'`
+- `env.isProd` → `NODE_ENV === 'production'`
+- `env.isTest` → `NODE_ENV === 'test'`
+- `env.isLocal` → `NODE_ENV === 'local'`
+- `env.environment` → Raw `NODE_ENV` value
+
+## Advanced Configuration
+Envado allows custom .env file paths and overriding variables:
+
+```ts
+validateEnv(schema, {
+  path: ['.env', '.env.production'], // Specify custom .env files
+  envVars: import.meta, // Override `process.env` values
 });
 ```
 
-### Setting Default value
 
-You can set the default value for the environment, which will be the fallback value when the value in the `.env` is undefined. For example:
+## Error Handling
 
-```js
-const env = envado({
-  PUBLIC_URL: { type: "string", defaultValue: "https://example.com" },
-  PORT: { type: "number", defaultValue: 5000 },
-  DEBUG_MODE: { type: "boolean", defaultValue: true },
-  TAGS: { type: "array", defaultValue: ["foo", "bar"] },
-  DATABASE_CONFIG: { type: "object", defaultValue: {
-    host: "localhost",
-    port: 5432,
-    username: "admin",
-    password: "password123",
-    databaseName: "myapp"
-  } },
-});
+```typescript
+try {
+  const env = validateEnv((builder) => ({
+    PORT: builder.number().port()
+  }));
+} catch (error) {
+  // Detailed validation errors:
+  // "Environment validation failed:
+  // PORT: Invalid port number"
+}
 ```
 
-Envado supports several validation types to ensure that your environment variables have the expected format. Here are examples of how to use each validation type:
+## Advanced Example
 
-
-
-**Validation Types**
-
-The following validation types are supported:
-
-- `string`: Validates that the environment variable is a string.
-- `number`: Validates that the environment variable is a number.
-- `boolean`: Validates that the environment variable is a boolean.
-- `array`: Validates that the environment variable is a valid array.
-- `object`: Validates that the environment variable is a valid object.
-
+```typescript
+const env = validateEnv((builder) => ({
+  // Database config
+  DB_HOST: builder.string().host(),
+  DB_PORT: builder.number().port(),
+  DB_USER: builder.string(),
+  DB_PASS: builder.string(),
+  
+  // Email configuration
+  SMTP_SERVER: builder.string(),
+  SMTP_PORT: builder.number().port(),
+  ADMIN_EMAIL: builder.string().email(),
+  
+  // API configuration
+  API_KEYS: builder.array<string>()
+    .commaSeparated()
+    .min(1)
+    .transform(keys => keys.map(k => k.trim())),
+  
+  // Feature flags
+  FEATURES: builder.object({
+    enableCache: builder.boolean(),
+    maxUsers: builder.number().min(1)
+  }).strict()
+}));
+```
 
 **License**
 [MIT](/LICENSE)
