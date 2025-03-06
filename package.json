@@ -1,6 +1,6 @@
 {
   "name": "envado",
-  "version": "3.0.0",
+  "version": "3.0.2",
   "description": "Safely validate environment variables",
   "repository": "git@github.com:abubalo/envado.git",
   "author": "Abubakar Balogun",
@@ -9,7 +9,7 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-   "build": "tsup src/index.ts --format cjs,esm --minify --dts --sourcemap --target es2020 --clean",
+    "build": "tsup src/index.ts --format cjs,esm --minify --dts --target es2023 --clean",
     "test": "vitest"
   },
   "keywords": [
@@ -17,19 +17,19 @@
     "dotenv",
     "env",
     "environment variable validator",
-    "env var",
     "environment",
     "environment variable",
     "validator",
     "validation",
-    "dotenv validator"
+    "dotenv validator",
+    "typescript",
+    "envado"
   ],
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "@types/dotenv": "^8.2.3",
     "@types/node": "^22.7.9",
     "tsup": "^8.3.0",
     "typescript": "^5.6.3",
