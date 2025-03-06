@@ -1,26 +1,54 @@
 import { config } from "dotenv";
 import {
+  InvalidEnvVariableError,
   MissingEnvVariableError,
   SchemaError,
   TransformationError,
   ValidationError,
 } from "./errors";
-import { InferSchemaType, SchemaDefinition, ValidationResult, Validator, Transformer } from "./types";
+import {
+  InferSchemaType,
+  SchemaDefinition,
+  ValidationResult,
+  Validator,
+  Transformer,
+  ExtendedEnvSchema,
+} from "./types";
 
+// Determine if we're in a browser environment
+const isBrowser =
+  typeof window !== "undefined" && typeof process === "undefined";
 
+// Get environment variables based on environment
+const getDefaultEnvVars = (): Record<string, string | undefined> => {
+  if (isBrowser) {
+    // For Vite in browser environments
+    if (typeof import.meta !== "undefined" && import.meta.env) {
+      return import.meta.env;
+    }
+    // Fallback to empty object in browser
+    return {};
+  } else {
+    // Node.js environment
+    return process.env;
+  }
+};
 
-const string = () => {
+// The rest of your existing code remains the same until validateEnv...
+
+const string = (options?: { default?: string }) => {
   const initialSchema: SchemaDefinition<string> = {
     type: "string",
     validators: [
       (value): ValidationResult =>
-        typeof value.trim() !== "string"
+        typeof value?.trim() !== "string"
           ? `Expected string, but got ${typeof value}`
           : undefined,
     ],
     asyncValidators: [],
     transformers: [],
     optional: false,
+    default: options?.default,
   };
 
   return {
@@ -76,11 +104,34 @@ const string = () => {
         ...initialSchema,
         validators: [...initialSchema.validators, newValidator],
       }).schema;
-    }
+    },
+    email: () => {
+      const newValidator: Validator<string> = (value) => {
+        const trimmedEmail = value.trim();
+
+        const emailPattern =
+          /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+        if (!emailPattern.test(trimmedEmail)) {
+          return "Invalid email format";
+        }
+
+        return undefined;
+      };
+
+      return createSchemaBuilder({
+        ...initialSchema,
+        validators: [...initialSchema.validators, newValidator],
+        transformers: [
+          ...initialSchema.transformers,
+          (value: string) => value.trim(),
+        ],
+      });
+    },
   };
 };
 
-const number = () => {
+const number = (options?: { default?: number }) => {
   const initialSchema: SchemaDefinition<number> = {
     type: "number",
     validators: [
@@ -96,6 +147,7 @@ const number = () => {
       (value) => (typeof value === "string" ? Number(value) : value),
     ],
     optional: false,
+    default: options?.default,
   };
 
   return {
@@ -136,13 +188,13 @@ const number = () => {
   };
 };
 
-const boolean = () => {
+const boolean = (options?: { default?: boolean }) => {
   const booleanTransformer = (value: string | boolean): boolean => {
     if (typeof value === "boolean") return value;
     const normalized = value.toLowerCase().trim();
     if (["true", "1", "yes"].includes(normalized)) return true;
     if (["false", "0", "no"].includes(normalized)) return false;
-    throw new Error("Invalid boolean value");
+    throw new InvalidEnvVariableError("", `Invalid boolean value: ${value}`);
   };
 
   const initialSchema: SchemaDefinition<boolean> = {
@@ -160,24 +212,62 @@ const boolean = () => {
     asyncValidators: [],
     transformers: [booleanTransformer],
     optional: false,
+    default: options?.default,
   };
 
   return createSchemaBuilder(initialSchema).schema;
 };
 
-const array = <T>() => {
+const array = <T>(options?: {
+  default?: Array<T>;
+  separator?: string;
+  trim?: boolean;
+}) => {
+  const separator = options?.separator ?? ",";
+  const shouldTrim = options?.trim ?? true;
+
+  const stringToArray = (value: string): string[] => {
+    const items = value.split(separator);
+    return shouldTrim ? items.map((item) => item.trim()) : items;
+  };
+
   const initialSchema: SchemaDefinition<T[]> = {
     type: "array",
     validators: [
       (value): ValidationResult => {
-        if (!Array.isArray(value)) {
-          return `Expected array, but got ${typeof value}`;
+        // If it's already an array, no validation needed
+        if (Array.isArray(value)) {
+          return undefined;
         }
+
+        // If it's a string, we'll convert it later in the transformers
+        if (typeof value === "string") {
+          return undefined;
+        }
+
+        return `Expected array or comma-separated string, but got ${typeof value}`;
       },
     ],
     asyncValidators: [],
-    transformers: [],
+    transformers: [
+      (value) => {
+        // If already an array, return as is
+        if (Array.isArray(value)) {
+          return value;
+        }
+
+        // If string, convert to array
+        if (typeof value === "string") {
+          return stringToArray(value);
+        }
+
+        // For other types, try to handle them appropriately
+        // This could be extended based on requirements
+        return value;
+      },
+    ],
     optional: false,
+    default: options?.default,
   };
 
   return {
@@ -223,17 +313,47 @@ const array = <T>() => {
       }).schema;
     },
 
-    commaSeparated: () =>
+    // We keep this for backward compatibility,
+    // but it's no longer necessary as parsing happens automatically
+    commaSeparated: (options?: { separator?: string; trim?: boolean }) =>
       createSchemaBuilder({
         ...initialSchema,
         transformers: [
-          (value: string) => value.split(",").map((item) => item.trim()),
+          ...initialSchema.transformers,
+          (value: any) => {
+            if (typeof value === "string") {
+              const sep = options?.separator ?? separator;
+              const doTrim = options?.trim ?? shouldTrim;
+
+              const parts = value.split(sep);
+              return doTrim ? parts.map((item) => item.trim()) : parts;
+            }
+            return value;
+          },
+        ],
+      }).schema,
+
+    // Add a method to specify a custom separator
+    withSeparator: (customSeparator: string, shouldTrimItems: boolean = true) =>
+      createSchemaBuilder({
+        ...initialSchema,
+        transformers: [
+          (value: any) => {
+            if (typeof value === "string") {
+              const parts = value.split(customSeparator);
+              return shouldTrimItems ? parts.map((item) => item.trim()) : parts;
+            }
+            return Array.isArray(value) ? value : [value];
+          },
         ],
       }).schema,
   };
 };
 
-const object = <T extends Record<string, SchemaDefinition<any>>>(schema: T) => {
+const object = <T extends Record<string, SchemaDefinition<any>>>(
+  schema: T,
+  options?: { default?: InferSchemaType<T> }
+) => {
   type ObjectType = { [K in keyof T]: InferSchemaType<{ key: T[K] }>["key"] };
 
   const initialSchema: SchemaDefinition<ObjectType> = {
@@ -248,6 +368,7 @@ const object = <T extends Record<string, SchemaDefinition<any>>>(schema: T) => {
     asyncValidators: [],
     transformers: [],
     optional: false,
+    default: options?.default,
   };
 
   return {
@@ -268,26 +389,6 @@ const object = <T extends Record<string, SchemaDefinition<any>>>(schema: T) => {
     },
   };
 };
-
-// const json = <T extends Record<string, SchemaDefinition<T>>>(schema: T) => {
-//   const initialSchema: SchemaDefinition<string> = {
-//     type: "json",
-//     validators: [
-//       (value) => {
-//         if (typeof value !== "string" || value === null) {
-//           return `Expexted JSON, but got ${typeof value}`;
-//         }
-//       },
-//     ],
-//     asyncValidators: [],
-//     transformers: [],
-//     optional: false,
-//   };
-
-//   return {
-//     ...createSchemaBuilder(initialSchema).schema,
-//   };
-// };
 
 const createSchemaBuilder = <T>(schema: SchemaDefinition<T>) => ({
   optional: () =>
@@ -319,7 +420,12 @@ const validateValue = <T>(
   const errors: string[] = [];
   let currentValue: any = value;
 
-  if (value === undefined) {
+  // Use default value if the environment variable is missing or undefined
+  if (value === undefined && schema.default !== undefined) {
+    currentValue = schema.default;
+  }
+
+  if (currentValue === undefined) {
     if (schema.optional) {
       return { value: undefined as any, errors: [] };
     } else {
@@ -352,7 +458,7 @@ const validateValue = <T>(
 };
 
 export const createEnvSchema = <
-  T extends Record<string, SchemaDefinition<any>>
+  T extends Record<string, SchemaDefinition<any>>,
 >(
   schemaFn: (builder: {
     string: typeof string;
@@ -367,10 +473,14 @@ export const createEnvSchema = <
 
   return {
     schema,
-    parse: (env: Record<string, string | undefined> = process.env) => {
+    parse: (env: Record<string, string | undefined> = getDefaultEnvVars()) => {
       const results = Object.entries(schema).map(([key, schema]) => {
         try {
-          const result = validateValue(schema, env[key], key);
+          // For Vite, check both the original key and with VITE_ prefix
+          const viteKey = `VITE_${key}`;
+          const value = key in env ? env[key] : env[viteKey];
+
+          const result = validateValue(schema, value, key);
           return { key, ...result };
         } catch (error) {
           if (
@@ -413,21 +523,13 @@ export const createEnvSchema = <
   };
 };
 
-type ExtendedEnvSchema<T> = T & {
-  isDev: boolean;
-  isProd: boolean;
-  isDevelopment: boolean;
-  isProduction: boolean;
-  isTest: boolean;
-  isStaging: boolean;
-  isLocal: boolean;
-  enviroment: string;
-};
-
 const addEnvDerivedProperties = <T extends Record<string, any>>(
   parsedEnv: T
 ) => {
-  const NODE_ENV = parsedEnv.NODE_ENV;
+  const NODE_ENV =
+    parsedEnv.NODE_ENV ||
+    (isBrowser && import.meta?.env?.MODE) ||
+    "development";
 
   return {
     ...parsedEnv,
@@ -450,7 +552,11 @@ export const validateEnv = <T extends Record<string, any>>(
     array: typeof array;
     object: typeof object;
   }) => T,
-  options?: { path?: string; envVars?: Record<string, string | undefined> }
+  options?: {
+    path?: string | string[];
+    envVars?: Record<string, string | undefined>;
+    prefix?: string;
+  }
 ): ExtendedEnvSchema<{
   [K in keyof T]: T[K] extends SchemaDefinition<infer U> ? U : never;
 }> => {
@@ -465,14 +571,35 @@ export const validateEnv = <T extends Record<string, any>>(
       ".env.production",
       ".env.prod",
     ],
-    envVars = process.env,
+    envVars = getDefaultEnvVars(),
+    prefix,
   } = options || {};
 
-  config({ path });
+  // Only load dotenv in Node.js environment
+  if (!isBrowser && typeof config === "function") {
+    config({ path });
+  }
 
   try {
     const envSchema = createEnvSchema(schemaFn);
-    const parsedEnv = envSchema.parse(envVars);
+
+    // If a prefix is provided, transform the environment variables to handle prefixed keys
+    const processedEnvVars = prefix
+      ? Object.entries(envVars).reduce(
+          (acc, [key, value]) => {
+            if (key.startsWith(prefix)) {
+              const unprefixedKey = key.substring(prefix.length);
+              acc[unprefixedKey] = value;
+            }
+            // Keep the original key too
+            acc[key] = value;
+            return acc;
+          },
+          {} as Record<string, string | undefined>
+        )
+      : envVars;
+
+    const parsedEnv = envSchema.parse(processedEnvVars);
     return addEnvDerivedProperties(parsedEnv);
   } catch (error) {
     if (
@@ -481,7 +608,7 @@ export const validateEnv = <T extends Record<string, any>>(
       error instanceof TransformationError ||
       error instanceof ValidationError
     ) {
-      throw error; // Re-throw custom errors
+      throw error;
     } else {
       throw new SchemaError(
         `Unexpected error during environment validation: ${
